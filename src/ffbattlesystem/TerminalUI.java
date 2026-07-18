@@ -47,17 +47,27 @@ public class TerminalUI {
      */
     public int askCharacterSelection(String promptMessage) {
         System.out.println("\n=== " + promptMessage + " ===");
+
+        System.out.println("--- Heroes ---");
         System.out.println("1. Cloud Strife (FFVII)");
         System.out.println("2. Barret Wallace (FFVII)");
         System.out.println("3. Tidus (FFX)");
         System.out.println("4. Yuna (FFX)");
         System.out.println("5. Wakka (FFX)");
-        System.out.println("6. Sephiroth (Boss)");
-        System.out.print("Choose a fighter (1-6): ");
-        
+
+        System.out.println("\n--- Villains & Bosses ---");
+        System.out.println("6. Sephiroth (FFVII)");
+        System.out.println("7. Jenova (FFVII)");
+        System.out.println("8. Rufus Shinra (FFVII)");
+        System.out.println("9. Seymour Guado (FFX)");
+        System.out.println("10. Yunalesca (FFX)");
+        System.out.println("11. Sin (FFX)");
+
+        System.out.print("\nChoose a fighter (1-11): ");
+
         return scanner.nextInt();
     }
-    
+
     public int askMainMenu(Character player) {
         System.out.println("It's " + player.getName() + "'s turn. What would you like to do?");
         System.out.println("1. Attack");
