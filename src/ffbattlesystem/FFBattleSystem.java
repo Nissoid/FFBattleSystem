@@ -21,11 +21,17 @@ public class FFBattleSystem {
         TerminalUI ui = new TerminalUI();
         Random random = new Random();
 
-        // Instantiate combatants using the Factory
-        Character player = factory.createCloud();
-        Character enemy = factory.createSephiroth();
+        // --- 2. CHARACTER SELECTION ---
+        // Select your character
+        int playerChoice = ui.askCharacterSelection("SELECT YOUR CHARACTER");
+        Character player = factory.createCharacterById(playerChoice);
 
-        ui.showMessage("BATTLE START!");
+        // Select your enemy
+        int enemyChoice = ui.askCharacterSelection("SELECT YOUR ENEMY");
+        Character enemy = factory.createCharacterById(enemyChoice);
+
+        ui.showMessage("\nBATTLE START!");
+        ui.showMessage(player.getName() + " VS " + enemy.getName());
         ui.showMessage("===============================\n");
 
         // --- 2. MAIN GAME LOOP ---
@@ -38,9 +44,9 @@ public class FFBattleSystem {
             boolean validTurn = false;
 
             while (!validTurn) {
-                int playerChoice = ui.askMainMenu(player);
+                int actionChoice = ui.askMainMenu(player);
 
-                switch (playerChoice) {
+                switch (actionChoice) {
                     case 1 -> {
                         // Standard physical attack
                         String result = player.attack(enemy);

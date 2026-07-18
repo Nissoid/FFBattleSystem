@@ -20,6 +20,40 @@ public class GameFactory {
     private Item getEther() {
         return new Item("Ether", 40, 2, false);
     }
+    
+    public Character createCharacterById(int id) {
+        switch (id) {
+            case 1: return createCloud();
+            case 2: return createBarret();
+            case 3: return createTidus();
+            case 4: return createYuna();
+            case 5: return createWakka();
+            case 6: return createSephiroth();
+            default:
+                // Fallback de seguridad: si el usuario pone un 9, le damos a Cloud por defecto.
+                System.err.println("Invalid ID. Defaulting to Cloud.");
+                return createCloud(); 
+        }
+    }
+    
+    private Skill getCommonSkill(String skillName) {
+        switch (skillName.toLowerCase()) {
+            case "fire":
+                return new Skill("Fire", 35, 12, false);
+            case "blizzard":
+                return new Skill("Blizzard", 35, 12, false);
+            case "thunder":
+                return new Skill("Thunder", 45, 18, false);
+            case "ice":
+                return new Skill ("Ice", 30, 10, false);
+            case "cure":
+                return new Skill("Cure", 30, 10, true);
+            default:
+                // Fallback de seguridad por si escribes mal el nombre
+                System.err.println("Skill not found in catalog: " + skillName);
+                return new Skill("Attack", 10, 0, false);
+        }
+    }
 
     // --- FINAL FANTASY X ROSTER ---
     public Character createTidus() {
@@ -40,19 +74,16 @@ public class GameFactory {
         Character yuna = new Character("Yuna", 90, 150, 10, 15, 25);
 
         // White Magic
-        yuna.learnSkill(new Skill("Cure", 30, 10, true));
-        yuna.learnSkill(new Skill("Cura", 60, 20, true));
-        yuna.learnSkill(new Skill("Curaga", 100, 35, true));
-        yuna.learnSkill(new Skill("Holy", 80, 40, false));
+        yuna.learnSkill(getCommonSkill("Cure"));
 
         // Black Magic
-        yuna.learnSkill(new Skill("Fire", 35, 12, false));
-        yuna.learnSkill(new Skill("Blizzard", 35, 12, false));
-        yuna.learnSkill(new Skill("Thunder", 45, 18, false));
-        yuna.learnSkill(new Skill("Watera", 55, 22, false));
-
+        yuna.learnSkill(getCommonSkill("Fire"));
+        yuna.learnSkill(getCommonSkill("Blizzard"));
+        yuna.learnSkill(getCommonSkill("Thunder"));
+        yuna.learnSkill(getCommonSkill("Ice"));
+        
         // Ultimate
-        yuna.learnSkill(new Skill("Ultima", 120, 70, false));
+        yuna.learnSkill(new Skill("Holy", 80, 40, false));
 
         yuna.addItem(getPotion());
         yuna.addItem(getEther());
@@ -82,9 +113,15 @@ public class GameFactory {
         cloud.learnSkill(new Skill("Blade Beam", 65, 30, false));
         cloud.learnSkill(new Skill("Climhazzard", 80, 40, false));
         cloud.learnSkill(new Skill("Omnislash", 120, 60, false));
-
-        cloud.learnSkill(new Skill("Cure", 30, 10, true));
-        cloud.learnSkill(new Skill("Fire", 35, 12, false));
+        
+        // White Magic
+        cloud.learnSkill(getCommonSkill("Cure"));
+        
+        // Black Magic
+        cloud.learnSkill(getCommonSkill("Fire"));
+        cloud.learnSkill(getCommonSkill("Blizzard"));
+        cloud.learnSkill(getCommonSkill("Thunder"));
+        cloud.learnSkill(getCommonSkill("Ice"));
 
         cloud.addItem(getPotion());
         cloud.addItem(getEther());

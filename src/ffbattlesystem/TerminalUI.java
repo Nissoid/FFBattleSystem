@@ -45,6 +45,19 @@ public class TerminalUI {
      *
      * @return The selected action as an integer.
      */
+    public int askCharacterSelection(String promptMessage) {
+        System.out.println("\n=== " + promptMessage + " ===");
+        System.out.println("1. Cloud Strife (FFVII)");
+        System.out.println("2. Barret Wallace (FFVII)");
+        System.out.println("3. Tidus (FFX)");
+        System.out.println("4. Yuna (FFX)");
+        System.out.println("5. Wakka (FFX)");
+        System.out.println("6. Sephiroth (Boss)");
+        System.out.print("Choose a fighter (1-6): ");
+        
+        return scanner.nextInt();
+    }
+    
     public int askMainMenu(Character player) {
         System.out.println("It's " + player.getName() + "'s turn. What would you like to do?");
         System.out.println("1. Attack");
