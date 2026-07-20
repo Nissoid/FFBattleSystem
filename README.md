@@ -40,39 +40,60 @@ src/
     ├── SkillType.java        # Enum: Categorizes skills into Physical, Black Magic, or White Magic
     ├── StatusEffect.java     # Model: Manages temporary battle debuffs, damage over time, and turn skips
     └── Item.java             # Model: Template for consumable items and quantity tracking
-🗺️ Development Roadmap
-[x] Phase 1: Core turn-based battle loop, stats, and basic physical attack engine (v1.0)
+## 🗺️ Development Roadmap
 
-[x] Phase 1.5: Dynamic skill lists and basic healing logic (v1.1)
+- [x] **Phase 1:** Core turn-based battle loop, stats, and basic physical attack engine (**v1.0**)
+- [x] **Phase 1.5:** Dynamic skill lists and basic healing logic (**v1.1**)
+- [x] **Phase 2:** Inventory management and consumable items integration (**v2.0**)
+- [x] **Phase 3:** Architectural refactoring (**MVC**), Factory Pattern, and expanded roster (**v2.0**)
+- [x] **Phase 4:** Status effect engine (**Poison, Sleep, Paralysis**), **ESNA**, status-clearing items, and hierarchical sub-menus with back-navigation support (**v3.0**)
+- [ ] **Phase 5:** Advanced combat functions (**Speed stats, Limit Breaks / Overdrive mechanics**)
+- [ ] **Phase 6:** Graphical User Interface (**GUI migration from TerminalUI to JavaFX/Swing**)
 
-[x] Phase 2: Inventory management and consumable items integration (v2.0)
+---
 
-[x] Phase 3: Architectural refactoring (MVC), Factory pattern, and expanded roster (v2.0)
+## 🎮 How to Play & Execute
 
-[x] Phase 4: Status effect engine (Poison, Sleep, Paralysis), ESNA, status-clearing items, and hierarchical sub-menus with back-navigation support (v3.0)
+### 1️⃣ Clone this repository
 
-[ ] Phase 5: Advanced combat functions (Speed stats, Limit Breaks / Overdrive mechanics)
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
+```
 
-[ ] Phase 6: Graphical User Interface (GUI migration from TerminalUI to JavaFX/Swing)
+### 2️⃣ Navigate to the project directory
 
-🎮 How to Play & Execute
-Clone this repository:
-
-Bash
-git clone [https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git)
-Navigate to the project directory:
-
-Bash
+```bash
 cd YOUR_REPOSITORY_NAME
-Compile all Java source files:
+```
 
-Bash
+### 3️⃣ Compile all Java source files
+
+```bash
 javac *.java
-Run the simulation:
+```
 
-Bash
+### 4️⃣ Run the simulation
+
+```bash
 java FFBattleSystem
-Follow the terminal prompts to select your fighter (IDs 1–12) and your opponent, then navigate through physical abilities, categorized magic, and items to claim victory!
+```
 
-Developed by Dani
+### 5️⃣ Start your adventure
 
+Follow the terminal prompts to:
+
+- Select your fighter (**IDs 1–12**)
+- Choose your opponent
+- Navigate through:
+  - ⚔️ Physical Abilities
+  - 🔥 Black Magic
+  - ✨ White Magic
+  - 🎒 Inventory Items
+
+Defeat your enemy and claim victory!
+
+---
+
+## 👨‍💻 Author
+
+**Developed by Dani**
