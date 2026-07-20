@@ -40,6 +40,7 @@ src/
     ├── SkillType.java        # Enum: Categorizes skills into Physical, Black Magic, or White Magic
     ├── StatusEffect.java     # Model: Manages temporary battle debuffs, damage over time, and turn skips
     └── Item.java             # Model: Template for consumable items and quantity tracking
+```
 ## 🗺️ Development Roadmap
 
 - [x] **Phase 1:** Core turn-based battle loop, stats, and basic physical attack engine (**v1.0**)
@@ -58,7 +59,7 @@ src/
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
-```
+
 
 ### 2️⃣ Navigate to the project directory
 
