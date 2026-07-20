@@ -4,21 +4,38 @@
  */
 package ffbattlesystem;
 
-/**
- * Responsible for creating and assembling game data. Centralizes the creation
- * of characters, skills, and base items (Factory Pattern).
- *
- * @author Dani
- */
 public class GameFactory {
 
-    // --- REUSABLE BASE ITEMS ---
     private Item getPotion() {
         return new Item("Potion", 30, 3, true);
     }
 
     private Item getEther() {
         return new Item("Ether", 40, 2, false);
+    }
+
+    private Item getAntidote() {
+        return new Item("Antidote", 0, 3, true);
+    }
+
+    private Item getAlarmClock() {
+        return new Item("Alarm Clock", 0, 2, true);
+    }
+
+    private Item getRemedy() {
+        return new Item("Remedy", 0, 1, true);
+    }
+
+    private StatusEffect getPoisonEffect() {
+        return new StatusEffect("Poison", 15, 3, false);
+    }
+
+    private StatusEffect getSleepEffect() {
+        return new StatusEffect("Sleep", 0, 2, true);
+    }
+
+    private StatusEffect getParalysisEffect() {
+        return new StatusEffect("Paralysis", 0, 1, true);
     }
 
     public Character createCharacterById(int id) {
@@ -45,9 +62,9 @@ public class GameFactory {
                 return createYunalesca();
             case 11:
                 return createSinh();
+            case 12:
+                return createAeris();
             default:
-                // Fallback de seguridad: si el usuario introduce un ID inválido.
-                System.err.println("Invalid ID. Defaulting to Cloud.");
                 return createCloud();
         }
     }
@@ -55,201 +72,182 @@ public class GameFactory {
     private Skill getCommonSkill(String skillName) {
         switch (skillName.toLowerCase()) {
             case "fire":
-                return new Skill("Fire", 35, 12, false);
+                return new Skill("Fire", 35, 12, SkillType.BLACK_MAGIC);
             case "blizzard":
-                return new Skill("Blizzard", 35, 12, false);
+                return new Skill("Blizzard", 35, 12, SkillType.BLACK_MAGIC);
             case "thunder":
-                return new Skill("Thunder", 45, 18, false);
+                return new Skill("Thunder", 45, 18, SkillType.BLACK_MAGIC);
             case "ice":
-                return new Skill("Ice", 30, 10, false);
+                return new Skill("Ice", 30, 10, SkillType.BLACK_MAGIC);
             case "cure":
-                return new Skill("Cure", 30, 10, true);
+                return new Skill("Cure", 30, 10, SkillType.WHITE_MAGIC);
+            case "esna":
+                return new Skill("Esna", 0, 15, SkillType.WHITE_MAGIC);
             default:
-                // Fallback de seguridad por si escribes mal el nombre
-                System.err.println("Skill not found in catalog: " + skillName);
-                return new Skill("Attack", 10, 0, false);
+                return new Skill("Attack", 10, 0, SkillType.PHYSICAL);
         }
     }
 
-    // --- FINAL FANTASY X ROSTER ---
     public Character createTidus() {
-        // Stats: Name, MaxHP, MaxMP, Attack, Defense, Speed
         Character tidus = new Character("Tidus", 120, 40, 35, 15, 45);
-
-        tidus.learnSkill(new Skill("Quick Hit", 30, 10, false));
-        tidus.learnSkill(new Skill("Spiral Cut", 50, 15, false));
-        tidus.learnSkill(new Skill("Jecht Shot", 75, 25, false));
-
+        
+        tidus.learnSkill(new Skill("Quick Hit", 30, 10, SkillType.PHYSICAL));
+        tidus.learnSkill(new Skill("Spiral Cut", 50, 15, SkillType.PHYSICAL));
+        tidus.learnSkill(new Skill("Jecht Shot", 75, 25, SkillType.PHYSICAL));
+        
         tidus.addItem(getPotion());
         tidus.addItem(getEther());
-
+        tidus.addItem(getAntidote());
+        
         return tidus;
     }
 
     public Character createYuna() {
         Character yuna = new Character("Yuna", 90, 150, 10, 15, 25);
-
-        // White Magic
+        
         yuna.learnSkill(getCommonSkill("Cure"));
-
-        // Black Magic
+        yuna.learnSkill(getCommonSkill("Esna"));
         yuna.learnSkill(getCommonSkill("Fire"));
         yuna.learnSkill(getCommonSkill("Blizzard"));
-        yuna.learnSkill(getCommonSkill("Thunder"));
-        yuna.learnSkill(getCommonSkill("Ice"));
-
-        // Ultimate
-        yuna.learnSkill(new Skill("Holy", 80, 40, false));
-
+        yuna.learnSkill(new Skill("Holy", 80, 40, SkillType.WHITE_MAGIC));
+        
         yuna.addItem(getPotion());
         yuna.addItem(getEther());
-
+        yuna.addItem(getRemedy());
+        
         return yuna;
     }
 
     public Character createWakka() {
         Character wakka = new Character("Wakka", 130, 30, 40, 20, 30);
-
-        wakka.learnSkill(new Skill("Dark Attack", 45, 10, false));
-        wakka.learnSkill(new Skill("Silence Attack", 45, 10, false));
-        wakka.learnSkill(new Skill("Sleep Attack", 45, 10, false));
-        wakka.learnSkill(new Skill("Aurochs Spirit", 85, 25, false));
-
+        
+        wakka.learnSkill(new Skill("Dark Attack", 45, 10, SkillType.PHYSICAL));
+        wakka.learnSkill(new Skill("Sleep Attack", 35, 15, SkillType.PHYSICAL, getSleepEffect()));
+        wakka.learnSkill(new Skill("Aurochs Spirit", 85, 25, SkillType.PHYSICAL));
+        
         wakka.addItem(getPotion());
         wakka.addItem(getEther());
-
+        wakka.addItem(getAlarmClock());
+        
         return wakka;
     }
 
     public Character createSeymour() {
         Character seymour = new Character("Seymour", 270, 150, 45, 22, 45);
-
-        seymour.learnSkill(new Skill("Blizzara", 70, 20, false));
-        seymour.learnSkill(new Skill("Thundara", 70, 20, false));
-        seymour.learnSkill(new Skill("Firaga", 100, 35, false));
-        seymour.learnSkill(new Skill("Requiem", 140, 60, false));
-
-        seymour.learnSkill(new Skill("Drain", 50, 15, false));
-        seymour.learnSkill(new Skill("Death Touch", 80, 30, false));
-
+        
+        seymour.learnSkill(new Skill("Blizzara", 70, 20, SkillType.BLACK_MAGIC));
+        seymour.learnSkill(new Skill("Firaga", 100, 35, SkillType.BLACK_MAGIC));
+        seymour.learnSkill(new Skill("Death Touch", 60, 30, SkillType.BLACK_MAGIC, getPoisonEffect()));
+        
         seymour.addItem(getPotion());
-
+        seymour.addItem(getRemedy());
+        
         return seymour;
     }
 
     public Character createYunalesca() {
         Character yunalesca = new Character("Yunalesca", 320, 180, 40, 30, 35);
-
-        yunalesca.learnSkill(new Skill("Hellbiter", 75, 20, false));
-        yunalesca.learnSkill(new Skill("Curse of Despair", 90, 30, false));
-        yunalesca.learnSkill(new Skill("Mega Death", 130, 50, false));
-        yunalesca.learnSkill(new Skill("Oblivion Kiss", 150, 70, false));
-
-        yunalesca.learnSkill(new Skill("Darkness Wave", 60, 20, false));
-        yunalesca.learnSkill(new Skill("Soul Drain", 70, 25, false));
-
+        
+        yunalesca.learnSkill(new Skill("Hellbiter", 65, 25, SkillType.BLACK_MAGIC, getPoisonEffect()));
+        yunalesca.learnSkill(new Skill("Mega Death", 130, 50, SkillType.BLACK_MAGIC));
+        
         yunalesca.addItem(getPotion());
-
         return yunalesca;
     }
 
     public Character createSinh() {
-        Character sin = new Character("Sinh", 500, 200, 70, 40, 20);
-
-        sin.learnSkill(new Skill("Gravity Wave", 100, 30, false));
-        sin.learnSkill(new Skill("Giga Graviton", 130, 50, false));
-        sin.learnSkill(new Skill("Terror Roar", 90, 25, false));
-        sin.learnSkill(new Skill("Ultimate Destruction", 180, 90, false));
-
-        sin.learnSkill(new Skill("Dark Tidal Wave", 80, 20, false));
-        sin.learnSkill(new Skill("Crushing Impact", 110, 35, false));
-
-        sin.addItem(getPotion());
-
-        return sin;
+        Character sinh = new Character("Sinh", 500, 200, 70, 40, 20);
+        
+        sinh.learnSkill(new Skill("Gravity Wave", 100, 30, SkillType.BLACK_MAGIC));
+        sinh.learnSkill(new Skill("Terror Roar", 60, 35, SkillType.PHYSICAL, getParalysisEffect()));
+        
+        sinh.addItem(getPotion());
+        
+        return sinh;
     }
 
-    // --- FINAL FANTASY VII ROSTER ---
     public Character createCloud() {
         Character cloud = new Character("Cloud", 150, 50, 45, 20, 35);
-
-        cloud.learnSkill(new Skill("Cross Slash", 50, 20, false));
-        cloud.learnSkill(new Skill("Blade Beam", 65, 30, false));
-        cloud.learnSkill(new Skill("Climhazzard", 80, 40, false));
-        cloud.learnSkill(new Skill("Omnislash", 120, 60, false));
-
-        // White Magic
+        
+        cloud.learnSkill(new Skill("Cross Slash", 40, 20, SkillType.PHYSICAL, getParalysisEffect()));
+        cloud.learnSkill(new Skill("Omnislash", 120, 60, SkillType.PHYSICAL));
+        
         cloud.learnSkill(getCommonSkill("Cure"));
-
-        // Black Magic
+        cloud.learnSkill(getCommonSkill("Esna"));
         cloud.learnSkill(getCommonSkill("Fire"));
-        cloud.learnSkill(getCommonSkill("Blizzard"));
-        cloud.learnSkill(getCommonSkill("Thunder"));
-        cloud.learnSkill(getCommonSkill("Ice"));
-
+        
         cloud.addItem(getPotion());
         cloud.addItem(getEther());
-
+        cloud.addItem(getRemedy());
+        
         return cloud;
     }
 
     public Character createSephiroth() {
         Character sephiroth = new Character("Sephiroth", 300, 100, 55, 25, 50);
-
-        sephiroth.learnSkill(new Skill("Octaslash", 75, 20, false));
-        sephiroth.learnSkill(new Skill("Shadow Flare", 90, 40, false));
-        sephiroth.learnSkill(new Skill("Heartless Angel", 100, 50, false));
-        sephiroth.learnSkill(new Skill("Supernova", 150, 80, false));
-
-        sephiroth.learnSkill(new Skill("Dark Flame", 55, 25, false));
-        sephiroth.learnSkill(new Skill("Quake", 60, 30, false));
-
+        
+        sephiroth.learnSkill(new Skill("Octaslash", 75, 20, SkillType.PHYSICAL));
+        sephiroth.learnSkill(new Skill("Shadow Flare", 90, 40, SkillType.BLACK_MAGIC));
+        sephiroth.learnSkill(new Skill("Bio", 30, 15, SkillType.BLACK_MAGIC, getPoisonEffect()));
+        
         sephiroth.addItem(getPotion());
-
+        sephiroth.addItem(getRemedy());
+        
         return sephiroth;
     }
 
     public Character createJenova() {
         Character jenova = new Character("Jenova", 280, 120, 50, 20, 40);
-
-        jenova.learnSkill(new Skill("Laser", 70, 20, false));
-        jenova.learnSkill(new Skill("Bio", 55, 15, false));
-        jenova.learnSkill(new Skill("Silence", 0, 10, false));
-        jenova.learnSkill(new Skill("Ultimate End", 130, 60, false));
-
-        jenova.learnSkill(new Skill("Dark Mist", 65, 25, false));
-        jenova.learnSkill(new Skill("Cosmic Wave", 80, 35, false));
-
+        
+        jenova.learnSkill(new Skill("Laser", 70, 20, SkillType.BLACK_MAGIC));
+        jenova.learnSkill(new Skill("Hypnotic Gas", 20, 25, SkillType.BLACK_MAGIC, getSleepEffect()));
+        jenova.learnSkill(new Skill("Bio", 40, 15, SkillType.BLACK_MAGIC, getPoisonEffect()));
+        
         jenova.addItem(getPotion());
-
+        
         return jenova;
     }
 
     public Character createRufus() {
         Character rufus = new Character("Rufus Shinra", 220, 80, 45, 18, 65);
 
-        rufus.learnSkill(new Skill("Dark Nation Assault", 60, 15, false));
-        rufus.learnSkill(new Skill("Shotgun Blast", 75, 20, false));
-        rufus.learnSkill(new Skill("Mako Bullet", 90, 30, false));
-        rufus.learnSkill(new Skill("President's Wrath", 120, 50, false));
-
-        rufus.learnSkill(new Skill("Rapid Fire", 50, 10, false));
-        rufus.learnSkill(new Skill("Sniper Shot", 85, 25, false));
+        rufus.learnSkill(new Skill("Dark Nation Assault", 50, 25, SkillType.PHYSICAL, getParalysisEffect()));
+        rufus.learnSkill(new Skill("Shotgun Blast", 75, 20, SkillType.PHYSICAL));
 
         rufus.addItem(getPotion());
+        rufus.addItem(getAntidote());
 
         return rufus;
     }
 
     public Character createBarret() {
         Character barret = new Character("Barret", 200, 20, 35, 35, 15);
-
-        barret.learnSkill(new Skill("Big Shot", 45, 10, false));
-        barret.learnSkill(new Skill("Mindblow", 30, 15, false));
-        barret.learnSkill(new Skill("Catastrophe", 95, 35, false));
+        
+        barret.learnSkill(new Skill("Big Shot", 45, 10, SkillType.PHYSICAL));
+        barret.learnSkill(new Skill("Catastrophe", 95, 35, SkillType.PHYSICAL));
 
         barret.addItem(getPotion());
+        barret.addItem(getAlarmClock());
 
         return barret;
+    }
+
+    public Character createAeris() {
+        Character aeris = new Character("Aeris", 130, 200, 30, 18, 40);
+
+        aeris.learnSkill(new Skill("Healing Wind", 40, 12, SkillType.WHITE_MAGIC)); // Heal skill treated as white magic
+        aeris.learnSkill(new Skill("Great Gospel", 120, 50, SkillType.WHITE_MAGIC)); // Ultimate support/heal
+
+        aeris.learnSkill(getCommonSkill("Cure"));
+        aeris.learnSkill(getCommonSkill("Esna"));
+
+        aeris.learnSkill(getCommonSkill("Fire"));
+        aeris.learnSkill(getCommonSkill("Thunder"));
+
+        aeris.addItem(getPotion());
+        aeris.addItem(getEther());
+        aeris.addItem(getRemedy());
+
+        return aeris;
     }
 }

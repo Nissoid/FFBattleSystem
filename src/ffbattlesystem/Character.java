@@ -7,136 +7,95 @@ package ffbattlesystem;
 import java.util.ArrayList;
 
 /**
- * The core blueprint for any combatant in the game. Pure domain entity: handles
- * stats, health management, and combat math. It is completely decoupled from
- * the console UI.
- *
- * @author Dani
+ * Core entity representing a fighter in the battle system. Manages stats,
+ * inventory, skills, and active status effects.
  */
 public class Character {
 
-    private ArrayList<Skill> skills;
-    private ArrayList<Item> items;
+    // --- Attributes ---
     private String name;
-    private int maxHp, currentHp, maxMp, currentMp;
-    private int attackPower, defense, speed;
+    private int maxHp;
+    private int currentHp;
+    private int maxMp;
+    private int currentMp;
+    private int attack;
+    private int defense;
+    private int speed;
+
+    // --- Data Structures ---
+    private ArrayList<Item> items;
+    private ArrayList<Skill> skills;
+    private ArrayList<StatusEffect> activeStatuses;
 
     /**
-     * Initializes a new character with full HP and MP, and empty
-     * inventory/skill lists.
+     * Standard constructor to create a new Character.
+     *
+     * @param name Character's name
+     * @param maxHp Maximum Health Points
+     * @param maxMp Maximum Mana Points
+     * @param attack Base attack power
+     * @param defense Base defense (reduces incoming damage)
+     * @param speed Determines turn order (for future implementations)
      */
-    public Character(String name, int maxHp, int maxMp, int attackPower, int defense, int speed) {
+    public Character(String name, int maxHp, int maxMp, int attack, int defense, int speed) {
         this.name = name;
         this.maxHp = maxHp;
-        this.currentHp = maxHp;
+        this.currentHp = maxHp; // Starts with full HP
         this.maxMp = maxMp;
-        this.currentMp = maxMp;
-        this.attackPower = attackPower;
+        this.currentMp = maxMp; // Starts with full MP
+        this.attack = attack;
         this.defense = defense;
         this.speed = speed;
 
-        // Prevent NullPointerExceptions by initializing empty collections
-        this.skills = new ArrayList<>();
+        // Initialize lists to avoid NullPointerExceptions
         this.items = new ArrayList<>();
+        this.skills = new ArrayList<>();
+        this.activeStatuses = new ArrayList<>();
     }
 
-    // --- BEHAVIOR METHODS ---
-    public void learnSkill(Skill newSkill) {
-        this.skills.add(newSkill);
-    }
-
-    public void addItem(Item newItem) {
-        this.items.add(newItem);
-    }
-
+    // ==========================================
+    //           BATTLE MECHANICS
+    // ==========================================
     /**
-     * Reduces HP based on incoming damage, ensuring it doesn't drop below zero.
-     *
-     * @param damage The amount of damage received.
-     * @return A log message describing the outcome.
-     */
-    public String takeDamage(int damage) {
-        this.currentHp = this.currentHp - damage;
-        if (this.currentHp < 0) {
-            this.currentHp = 0;
-        }
-        return this.name + " takes " + damage + " damage! Remaining HP: " + this.currentHp;
-    }
-
-    /**
-     * Restores HP ensuring it does not exceed the character's maximum HP.
-     *
-     * @param healingAmount The amount of HP to restore.
-     * @return A log message describing the outcome.
-     */
-    public String healing(int healingAmount) {
-        if (this.currentHp + healingAmount > this.maxHp) {
-            this.currentHp = this.maxHp;
-        } else {
-            this.currentHp = this.currentHp + healingAmount;
-        }
-        return this.name + " feels revitalized! Current HP: " + this.currentHp;
-    }
-
-    /**
-     * Consumes an item from the inventory and applies its effects (HP or MP
-     * restoration).
-     *
-     * @param itemIndex The index of the item in the inventory list.
-     * @return A log message detailing the item usage result.
-     */
-    public String useItem(int itemIndex) {
-        if (itemIndex < 0 || itemIndex >= this.items.size()) {
-            return "Invalid item selection.";
-        }
-
-        Item chosenItem = this.items.get(itemIndex);
-
-        if (chosenItem.getQuantity() <= 0) {
-            return "You don't have any " + chosenItem.getName() + " left!";
-        }
-
-        String resultMessage = "";
-
-        if (chosenItem.isRestoresHP()) {
-            resultMessage = this.healing(chosenItem.getPower());
-        } else {
-            if (this.currentMp + chosenItem.getPower() > this.maxMp) {
-                this.currentMp = this.maxMp;
-            } else {
-                this.currentMp = this.currentMp + chosenItem.getPower();
-            }
-            resultMessage = this.name + " recovers " + chosenItem.getPower() + " MP!";
-        }
-
-        chosenItem.consume();
-        return resultMessage;
-    }
-
-    /**
-     * Performs a standard physical attack against a target.
-     *
-     * @param target The character receiving the attack.
-     * @return A combined log message of the attack and the resulting damage.
+     * Performs a basic physical attack against a target. Damage is calculated
+     * based on attacker's attack and target's defense.
      */
     public String attack(Character target) {
-        int damage = this.attackPower - target.getDefense();
-
-        if (damage > 0) {
-            String attackLog = this.name + " attacks " + target.getName() + " and deals " + damage + " damage.\n";
-            String targetLog = target.takeDamage(damage);
-            return attackLog + targetLog;
-        } else {
-            return this.name + " attacks " + target.getName() + " but their armor is too thick! No damage taken.";
+        // Calculate basic damage (Minimum 1 damage)
+        int damageDealt = this.attack - target.getDefense();
+        if (damageDealt < 1) {
+            damageDealt = 1;
         }
+
+        String log = this.name + " attacks " + target.getName() + "!\n";
+        log += target.takeDamage(damageDealt);
+        return log;
     }
 
     /**
-     * Casts a skill, spending MP, and applies its effect (damage or healing).
-     *
-     * @param target The character receiving the skill effect (if hostile).
-     * @param skillIndex The index of the skill in the character's spellbook.
-     * @return A log message detailing the action.
+     * Reduces the character's HP by a specific amount.
+     */
+    public String takeDamage(int damage) {
+        this.currentHp -= damage;
+        if (this.currentHp < 0) {
+            this.currentHp = 0; // Prevent negative HP
+        }
+        return this.name + " takes " + damage + " damage!";
+    }
+
+    /**
+     * Restores the character's HP without exceeding the maximum limit.
+     */
+    public String healing(int healAmount) {
+        this.currentHp += healAmount;
+        if (this.currentHp > this.maxHp) {
+            this.currentHp = this.maxHp; // Prevent overheal
+        }
+        return this.name + " recovers " + healAmount + " HP!";
+    }
+
+    /**
+     * Executes a skill against a target character.
      */
     public String useSkill(Character target, int skillIndex) {
         Skill selectedSkill = this.skills.get(skillIndex);
@@ -145,105 +104,221 @@ public class Character {
             return "Not enough MP to cast this spell!";
         }
 
-        this.currentMp = this.currentMp - selectedSkill.getMpCost();
-        String actionLog = this.name + " casts " + selectedSkill.getName() + "!\n";
+        this.currentMp -= selectedSkill.getMpCost();
+        String actionLog = this.name + " uses " + selectedSkill.getName() + "!\n";
 
-        if (selectedSkill.isIsHealing()) {
+        // If it's White Magic, heal. Otherwise, deal damage.
+        if (selectedSkill.getType() == SkillType.WHITE_MAGIC) {
             actionLog += this.healing(selectedSkill.getDamage());
+            if (selectedSkill.getName().equalsIgnoreCase("Esna")) {
+                if (!this.activeStatuses.isEmpty()) {
+                    this.clearAllStatuses();
+                    actionLog += "\n" + this.name + " is cured of all status effects!";
+                } else {
+                    actionLog += "\nIt had no effect.";
+                }
+            }
         } else {
             actionLog += target.takeDamage(selectedSkill.getDamage());
+        }
+
+        if (selectedSkill.getEffectToApply() != null) {
+            StatusEffect cloneEffect = new StatusEffect(selectedSkill.getEffectToApply());
+            target.addStatusEffect(cloneEffect);
+            actionLog += "\n>> " + target.getName() + " has been afflicted with [" + cloneEffect.getName() + "]! <<";
         }
 
         return actionLog;
     }
 
     /**
-     * Checks if the character is still capable of fighting.
-     *
-     * @return True if HP is greater than 0, false otherwise.
+     * Uses a consumable item from the inventory.
      */
+    public String useItem(int itemIndex) {
+        Item selectedItem = this.items.get(itemIndex);
+
+        if (selectedItem.getQuantity() <= 0) {
+            return "You don't have any " + selectedItem.getName() + " left!";
+        }
+
+        selectedItem.decreaseQuantity();
+        String log = this.name + " uses a " + selectedItem.getName() + "!\n";
+
+        if (selectedItem.getName().equalsIgnoreCase("Antidote")) {
+            if (this.removeStatusEffect("Poison")) {
+                log += this.name + " is cured of Poison!";
+            } else {
+                log += "It had no effect.";
+            }
+        } else if (selectedItem.getName().equalsIgnoreCase("Alarm Clock")) {
+            if (this.removeStatusEffect("Sleep")) {
+                log += this.name + " is cured of Sleep!";
+            } else {
+                log += "It had no effect.";
+            }
+        } else if (selectedItem.getName().equalsIgnoreCase("Remedy")) {
+            if (!this.activeStatuses.isEmpty()) {
+                this.clearAllStatuses();
+                log += this.name + " is cured of all status effects!";
+            } else {
+                log += "It had no effect.";
+            }
+        } else if (selectedItem.isRestoresHp()) {
+            log += this.healing(selectedItem.getRestoreAmount());
+        } else {
+            // Restore MP
+            this.currentMp += selectedItem.getRestoreAmount();
+            if (this.currentMp > this.maxMp) {
+                this.currentMp = this.maxMp;
+            }
+            log += this.name + " recovers " + selectedItem.getRestoreAmount() + " MP!";
+        }
+
+        return log;
+    }
+
+    // ==========================================
+    //           STATUS EFFECT LOGIC
+    // ==========================================
+    /**
+     * Processes active status effects that trigger at the start of the turn
+     * (e.g., periodic damage from Poison).
+     *
+     * @return A detailed battle log string describing what happened.
+     */
+    public String processStatuses() {
+        String log = "";
+
+        for (int i = this.activeStatuses.size() - 1; i >= 0; i--) {
+            StatusEffect effect = this.activeStatuses.get(i);
+
+            // 1. Apply periodic damage (e.g., Poison)
+            if (effect.getDamage() > 0) {
+                this.currentHp -= effect.getDamage();
+                if (this.currentHp < 0) {
+                    this.currentHp = 0;
+                }
+
+                // Format: "Cloud suffers 15 damage from [Poison]! (2 turns remaining)"
+                log += this.name + " suffers " + effect.getDamage() + " damage from [" + effect.getName() + "]! (" + effect.getTime() + " turns remaining)\n";
+            }
+        }
+        return log;
+    }
+
+    /**
+     * Decreases the duration of all active status effects by 1 turn and removes
+     * any that have expired. This should be called at the end of the turn.
+     *
+     * @return A detailed battle log string describing which effects expired.
+     */
+    public String decayStatuses() {
+        String log = "";
+        for (int i = this.activeStatuses.size() - 1; i >= 0; i--) {
+            StatusEffect effect = this.activeStatuses.get(i);
+            effect.decreaseTime();
+            if (effect.getTime() <= 0) {
+                log += this.name + " has completely recovered from [" + effect.getName() + "]!\n";
+                this.activeStatuses.remove(i);
+            }
+        }
+        return log;
+    }
+
+    /**
+     * Removes a specific status effect by name.
+     *
+     * @param statusName The name of the effect to remove.
+     * @return true if the effect was found and removed, false otherwise.
+     */
+    public boolean removeStatusEffect(String statusName) {
+        boolean removed = false;
+        for (int i = this.activeStatuses.size() - 1; i >= 0; i--) {
+            if (this.activeStatuses.get(i).getName().equalsIgnoreCase(statusName)) {
+                this.activeStatuses.remove(i);
+                removed = true;
+            }
+        }
+        return removed;
+    }
+
+    /**
+     * Clears all active status effects.
+     */
+    public void clearAllStatuses() {
+        this.activeStatuses.clear();
+    }
+
+    /**
+     * Checks if the character is prevented from moving due to a status effect.
+     *
+     * @return true if the character can act, false if they lose their turn.
+     */
+    public boolean canAct() {
+        for (StatusEffect effect : this.activeStatuses) {
+            if (effect.isLosesTurn()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void addStatusEffect(StatusEffect newEffect) {
+        this.activeStatuses.add(newEffect);
+    }
+
+    // ==========================================
+    //           UTILITIES & GETTERS
+    // ==========================================
     public boolean isAlive() {
         return this.currentHp > 0;
     }
 
-    // --- GETTERS & SETTERS ---
-    public String getName() {
-        return name;
+    public void learnSkill(Skill skill) {
+        this.skills.add(skill);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void addItem(Item item) {
+        this.items.add(item);
+    }
+
+    public String getName() {
+        return name;
     }
 
     public int getMaxHp() {
         return maxHp;
     }
 
-    public void setMaxHp(int maxHp) {
-        this.maxHp = maxHp;
-    }
-
     public int getCurrentHp() {
         return currentHp;
-    }
-
-    public void setCurrentHp(int currentHp) {
-        this.currentHp = currentHp;
     }
 
     public int getMaxMp() {
         return maxMp;
     }
 
-    public void setMaxMp(int maxMp) {
-        this.maxMp = maxMp;
-    }
-
     public int getCurrentMp() {
         return currentMp;
     }
 
-    public void setCurrentMp(int currentMp) {
-        this.currentMp = currentMp;
-    }
-
-    public int getAttackPower() {
-        return attackPower;
-    }
-
-    public void setAttackPower(int attackPower) {
-        this.attackPower = attackPower;
+    public int getAttack() {
+        return attack;
     }
 
     public int getDefense() {
         return defense;
     }
 
-    public void setDefense(int defense) {
-        this.defense = defense;
-    }
-
     public int getSpeed() {
         return speed;
-    }
-
-    public void setSpeed(int speed) {
-        this.speed = speed;
-    }
-
-    public ArrayList<Skill> getSkills() {
-        return skills;
-    }
-
-    public void setSkills(ArrayList<Skill> skills) {
-        this.skills = skills;
     }
 
     public ArrayList<Item> getItems() {
         return items;
     }
 
-    public void setItems(ArrayList<Item> items) {
-        this.items = items;
+    public ArrayList<Skill> getSkills() {
+        return skills;
     }
 }

@@ -7,10 +7,8 @@ package ffbattlesystem;
 import java.util.Random;
 
 /**
- * The main engine of our turn-based RPG battle simulator. Acts as the
- * Controller in the MVC pattern.
- *
- * @author Dani
+ * Main class that controls the flow of the game. Orchestrates the setup,
+ * character selection, and the main battle loop.
  */
 public class FFBattleSystem {
 
@@ -22,85 +20,185 @@ public class FFBattleSystem {
         Random random = new Random();
 
         // --- 2. CHARACTER SELECTION ---
-        // Select your character
-        int playerChoice = ui.askCharacterSelection("SELECT YOUR CHARACTER");
-        Character player = factory.createCharacterById(playerChoice);
+        // Select the player character via UI
+        int playerSelection = ui.askCharacterSelection("SELECT YOUR CHARACTER");
+        Character player = factory.createCharacterById(playerSelection);
 
-        // Select your enemy
-        int enemyChoice = ui.askCharacterSelection("SELECT YOUR ENEMY");
-        Character enemy = factory.createCharacterById(enemyChoice);
+        // Select the enemy character via UI
+        int enemySelection = ui.askCharacterSelection("SELECT YOUR ENEMY");
+        Character enemy = factory.createCharacterById(enemySelection);
 
         ui.showMessage("\nBATTLE START!");
         ui.showMessage(player.getName() + " VS " + enemy.getName());
         ui.showMessage("===============================\n");
 
-        // --- 2. MAIN GAME LOOP ---
-        // Loop continues until one of the characters' HP reaches zero
+        // --- 3. MAIN GAME LOOP ---
+        // Loop continues until one of the characters drops to 0 HP
         while (player.isAlive() && enemy.isAlive()) {
 
             ui.showBattleStatus(player, enemy);
 
-            // --- PLAYER TURN ---
-            boolean validTurn = false;
+            // ==========================================
+            //               PLAYER TURN
+            // ==========================================
+            ui.showMessage("\n--- " + player.getName() + "'s Turn ---");
 
-            while (!validTurn) {
-                int actionChoice = ui.askMainMenu(player);
+            // 1. Process Status Effects (Poison, etc.)
+            String playerStatusLog = player.processStatuses();
+            if (!playerStatusLog.isEmpty()) {
+                ui.showMessage(playerStatusLog);
+            }
 
-                switch (actionChoice) {
-                    case 1 -> {
-                        // Standard physical attack
-                        String result = player.attack(enemy);
-                        ui.showMessage(result);
-                        validTurn = true;
-                    }
-                    case 2 -> {
-                        // Magic and Skills execution
-                        int skillIndex = ui.askSkillMenu(player);
+            // Check if player fainted from status effects
+            if (!player.isAlive()) {
+                ui.showMessage(player.getName() + " has fainted!");
+            } else {
+                // 2. Check if the character can move (Paralysis, Sleep)
+                if (!player.canAct()) {
+                    ui.showMessage(player.getName() + " is unable to move this turn!");
+                } else {
+                    // 3. If able to move, show the action menu
+                    boolean validTurn = false;
 
-                        if (skillIndex >= 0 && skillIndex < player.getSkills().size()) {
-                            String result = player.useSkill(enemy, skillIndex);
-                            ui.showMessage(result);
-                            validTurn = true;
-                        } else {
-                            ui.showMessage("Invalid spell choice. Taking you back to the main menu...\n");
+                    while (!validTurn) {
+                        int actionChoice = ui.askMainMenu(player);
+
+                        switch (actionChoice) {
+                            case 1 -> {
+                                // 1. ATTACK
+                                String result = player.attack(enemy);
+                                ui.showMessage(result);
+                                validTurn = true; // Fin del turno
+                            }
+                            case 2 -> {
+                                // 2. PHYSICAL SKILLS
+                                int skillIdx = ui.askFilteredSkillMenu(player, SkillType.PHYSICAL, "PHYSICAL ABILITIES");
+
+                                // Si el usuario pulsa -1, cancela y volvemos al menú principal
+                                if (skillIdx == -1) {
+                                    ui.showMessage("Returning to main menu...\n");
+                                    // validTurn sigue en false, por lo que el bucle vuelve a pedir el menú principal
+                                } else if (skillIdx >= 0 && skillIdx < player.getSkills().size() && player.getSkills().get(skillIdx).getType() == SkillType.PHYSICAL) {
+                                    ui.showMessage(player.useSkill(enemy, skillIdx));
+                                    validTurn = true; // Fin del turno
+                                } else {
+                                    ui.showMessage("Invalid selection. Try again.\n");
+                                }
+                            }
+                            case 3 -> {
+                                // 3. MAGIC (Sub-menu with back navigation)
+                                boolean choosingMagic = true;
+
+                                while (choosingMagic) {
+                                    int magicCat = ui.askMagicCategoryMenu();
+
+                                    if (magicCat == 0) {
+                                        // Volver al menú principal
+                                        choosingMagic = false;
+                                    } else if (magicCat == 1) {
+                                        // Black Magic
+                                        int skillIdx = ui.askFilteredSkillMenu(player, SkillType.BLACK_MAGIC, "BLACK MAGIC");
+
+                                        if (skillIdx == -1) {
+                                            // Vuelve al selector de categorías (no rompe el choosingMagic)
+                                            ui.showMessage("Returning to categories...\n");
+                                        } else if (skillIdx >= 0 && skillIdx < player.getSkills().size() && player.getSkills().get(skillIdx).getType() == SkillType.BLACK_MAGIC) {
+                                            ui.showMessage(player.useSkill(enemy, skillIdx));
+                                            validTurn = true;      // Fin del turno
+                                            choosingMagic = false; // Salimos del bucle de magia
+                                        } else {
+                                            ui.showMessage("Invalid selection. Try again.\n");
+                                        }
+                                    } else if (magicCat == 2) {
+                                        // White Magic
+                                        int skillIdx = ui.askFilteredSkillMenu(player, SkillType.WHITE_MAGIC, "WHITE MAGIC");
+
+                                        if (skillIdx == -1) {
+                                            // Vuelve al selector de categorías
+                                            ui.showMessage("Returning to categories...\n");
+                                        } else if (skillIdx >= 0 && skillIdx < player.getSkills().size() && player.getSkills().get(skillIdx).getType() == SkillType.WHITE_MAGIC) {
+                                            ui.showMessage(player.useSkill(enemy, skillIdx));
+                                            validTurn = true;      // Fin del turno
+                                            choosingMagic = false; // Salimos del bucle de magia
+                                        } else {
+                                            ui.showMessage("Invalid selection. Try again.\n");
+                                        }
+                                    } else {
+                                        ui.showMessage("Invalid category. Try again.\n");
+                                    }
+                                }
+                            }
+                            case 4 -> {
+                                // 4. ITEMS
+                                int itemIndex = ui.askItemMenu(player);
+
+                                if (itemIndex == -1) {
+                                    ui.showMessage("Returning to main menu...\n");
+                                } else if (itemIndex >= 0 && itemIndex < player.getItems().size()) {
+                                    ui.showMessage(player.useItem(itemIndex));
+                                    validTurn = true; // Fin del turno
+                                } else {
+                                    ui.showMessage("Invalid item selection. Try again.\n");
+                                }
+                            }
+                            default ->
+                                ui.showMessage("Invalid option. Please enter 1, 2, 3, or 4.\n");
                         }
                     }
-                    case 3 -> {
-                        // Inventory usage
-                        int itemIndex = ui.askItemMenu(player);
+                }
 
-                        if (itemIndex >= 0 && itemIndex < player.getItems().size()) {
-                            String result = player.useItem(itemIndex);
-                            ui.showMessage(result);
-                            validTurn = true;
-                        } else {
-                            ui.showMessage("Invalid item selection. Taking you back...\n");
-                        }
-                    }
-                    default ->
-                        ui.showMessage("Invalid option. Please enter 1, 2, or 3.\n");
+                // End of Player Turn: decay statuses
+                String playerDecayLog = player.decayStatuses();
+                if (!playerDecayLog.isEmpty()) {
+                    ui.showMessage(playerDecayLog);
                 }
             }
 
-            // --- ENEMY TURN ---
-            // Only execute if the enemy survived the player's attack
+            // ==========================================
+            //               ENEMY TURN
+            // ==========================================
+            // Only execute turn if the enemy survived the player's attack
             if (enemy.isAlive()) {
-                ui.showMessage("\n--- Enemy Turn ---");
+                ui.showMessage("\n--- " + enemy.getName() + "'s Turn ---");
 
-                // Simple AI: 50% chance to attack, 50% chance to use their first skill
-                int enemyAction = random.nextInt(2);
+                // 1. Process enemy's Status Effects
+                String enemyStatusLog = enemy.processStatuses();
+                if (!enemyStatusLog.isEmpty()) {
+                    ui.showMessage(enemyStatusLog);
+                }
 
-                if (enemyAction == 0) {
-                    ui.showMessage(enemy.attack(player));
+                // Check if enemy fainted from status effects
+                if (!enemy.isAlive()) {
+                    ui.showMessage(enemy.getName() + " has fainted!");
                 } else {
-                    ui.showMessage(enemy.useSkill(player, 0));
+                    // 2. Check if the enemy can move
+                    if (!enemy.canAct()) {
+                        ui.showMessage(enemy.getName() + " is unable to move this turn!");
+                    } else {
+                        // 3. Simple Artificial Intelligence (AI)
+                        // 50% chance to attack, 50% chance to use their first skill
+                        int enemyAction = random.nextInt(2);
+
+                        if (enemyAction == 0) {
+                            ui.showMessage(enemy.attack(player));
+                        } else {
+                            // The enemy uses the skill at index 0 of their list
+                            ui.showMessage(enemy.useSkill(player, 0));
+                        }
+                    }
+
+                    // End of Enemy Turn: decay statuses
+                    String enemyDecayLog = enemy.decayStatuses();
+                    if (!enemyDecayLog.isEmpty()) {
+                        ui.showMessage(enemyDecayLog);
+                    }
                 }
             }
 
             ui.showMessage("\n-------------------------------");
         }
 
-        // --- 3. BATTLE WRAP-UP ---
+        // --- 4. BATTLE WRAP-UP ---
         ui.showMessage("\n===============================");
 
         if (player.isAlive()) {
@@ -109,7 +207,7 @@ public class FFBattleSystem {
             ui.showMessage("Game Over! The winner is: " + enemy.getName());
         }
 
-        // Clean up resources
+        // Close the scanner and free resources
         ui.close();
     }
 }
