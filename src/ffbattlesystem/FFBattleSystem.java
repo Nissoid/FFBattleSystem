@@ -1,30 +1,26 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
- */
 package ffbattlesystem;
 
 import java.util.Random;
 
 /**
- * Main class that controls the flow of the game. Orchestrates the setup,
- * character selection, and the main battle loop.
+ * Controller class orchestrating the ATB (Active Time Battle) loop, 
+ * turns, menus, and character substitutions.
  */
 public class FFBattleSystem {
 
     public static void main(String[] args) {
 
-        // --- 1. ENGINE INITIALIZATION ---
         GameFactory factory = new GameFactory();
         TerminalUI ui = new TerminalUI();
         Random random = new Random();
 
-        // --- 2. CHARACTER SELECTION ---
-        // Select the player character via UI
         int playerSelection = ui.askCharacterSelection("SELECT YOUR CHARACTER");
         Character player = factory.createCharacterById(playerSelection);
+        
+        // POO Magic 1: Store reference to the original character (e.g., Yuna) 
+        // to restore them when an Aeon falls.
+        Character originalPlayer = player;
 
-        // Select the enemy character via UI
         int enemySelection = ui.askCharacterSelection("SELECT YOUR ENEMY");
         Character enemy = factory.createCharacterById(enemySelection);
 
@@ -32,182 +28,212 @@ public class FFBattleSystem {
         ui.showMessage(player.getName() + " VS " + enemy.getName());
         ui.showMessage("===============================\n");
 
-        // --- 3. MAIN GAME LOOP ---
-        // Loop continues until one of the characters drops to 0 HP
-        while (player.isAlive() && enemy.isAlive()) {
+        // --- ATB (Active Time Battle) VARIABLES ---
+        int playerATB = 0;
+        int enemyATB = 0;
+        final int ATB_THRESHOLD = 100;
 
-            ui.showBattleStatus(player, enemy);
+        // The game loop monitors the original player's life, not the temporary Aeon's life.
+        while (originalPlayer.isAlive() && enemy.isAlive()) {
+
+            // Fill ATB gauges based on character speed stats
+            playerATB += player.getSpeed();
+            enemyATB += enemy.getSpeed();
 
             // ==========================================
-            //               PLAYER TURN
+            // 1. PLAYER TURN PROCESSING
             // ==========================================
-            ui.showMessage("\n--- " + player.getName() + "'s Turn ---");
+            if (playerATB >= ATB_THRESHOLD) {
+                playerATB -= ATB_THRESHOLD; // Consume gauge to take action
 
-            // 1. Process Status Effects (Poison, etc.)
-            String playerStatusLog = player.processStatuses();
-            if (!playerStatusLog.isEmpty()) {
-                ui.showMessage(playerStatusLog);
-            }
+                ui.showBattleStatus(player, enemy);
+                ui.showMessage("\n--- " + player.getName() + "'s Turn ---");
+                
+                String playerStatusLog = player.processStatuses();
+                if (!playerStatusLog.isEmpty()) ui.showMessage(playerStatusLog);
 
-            // Check if player fainted from status effects
-            if (!player.isAlive()) {
-                ui.showMessage(player.getName() + " has fainted!");
-            } else {
-                // 2. Check if the character can move (Paralysis, Sleep)
+                // Check if poison/status effects killed the active character before they could move
+                if (!player.isAlive()) {
+                    if (player != originalPlayer) { // Aeon died
+                        ui.showMessage("\n>> " + player.getName() + " fades away... " + originalPlayer.getName() + " returns to the battlefield! <<\n");
+                        player = originalPlayer; // Restore summoner
+                        playerATB = 0;
+                        continue; // Skip the rest of the dead Aeon's turn
+                    } else {
+                        break; // Original player died, Game Over
+                    }
+                }
+
                 if (!player.canAct()) {
                     ui.showMessage(player.getName() + " is unable to move this turn!");
                 } else {
-                    // 3. If able to move, show the action menu
                     boolean validTurn = false;
 
+                    // Loop until a valid action is successfully executed (handles 'Back' selections)
                     while (!validTurn) {
                         int actionChoice = ui.askMainMenu(player);
 
                         switch (actionChoice) {
-                            case 1 -> {
-                                // 1. ATTACK
-                                String result = player.attack(enemy);
-                                ui.showMessage(result);
-                                validTurn = true; // Fin del turno
+                            case 1 -> { // ATTACK
+                                ui.showMessage(player.attack(enemy));
+                                validTurn = true;
                             }
-                            case 2 -> {
-                                // 2. PHYSICAL SKILLS
+                            case 2 -> { // PHYSICAL SKILLS
                                 int skillIdx = ui.askFilteredSkillMenu(player, SkillType.PHYSICAL, "PHYSICAL ABILITIES");
-
-                                // Si el usuario pulsa -1, cancela y volvemos al menú principal
                                 if (skillIdx == -1) {
                                     ui.showMessage("Returning to main menu...\n");
-                                    // validTurn sigue en false, por lo que el bucle vuelve a pedir el menú principal
                                 } else if (skillIdx >= 0 && skillIdx < player.getSkills().size() && player.getSkills().get(skillIdx).getType() == SkillType.PHYSICAL) {
                                     ui.showMessage(player.useSkill(enemy, skillIdx));
-                                    validTurn = true; // Fin del turno
+                                    validTurn = true;
                                 } else {
                                     ui.showMessage("Invalid selection. Try again.\n");
                                 }
                             }
-                            case 3 -> {
-                                // 3. MAGIC (Sub-menu with back navigation)
+                            case 3 -> { // MAGIC SUB-MENUS
                                 boolean choosingMagic = true;
-
                                 while (choosingMagic) {
                                     int magicCat = ui.askMagicCategoryMenu();
-
+                                    
                                     if (magicCat == 0) {
-                                        // Volver al menú principal
-                                        choosingMagic = false;
-                                    } else if (magicCat == 1) {
-                                        // Black Magic
+                                        choosingMagic = false; 
+                                    } else if (magicCat == 1) { // BLACK MAGIC
                                         int skillIdx = ui.askFilteredSkillMenu(player, SkillType.BLACK_MAGIC, "BLACK MAGIC");
-
                                         if (skillIdx == -1) {
-                                            // Vuelve al selector de categorías (no rompe el choosingMagic)
                                             ui.showMessage("Returning to categories...\n");
                                         } else if (skillIdx >= 0 && skillIdx < player.getSkills().size() && player.getSkills().get(skillIdx).getType() == SkillType.BLACK_MAGIC) {
                                             ui.showMessage(player.useSkill(enemy, skillIdx));
-                                            validTurn = true;      // Fin del turno
-                                            choosingMagic = false; // Salimos del bucle de magia
+                                            validTurn = true;
+                                            choosingMagic = false;
                                         } else {
-                                            ui.showMessage("Invalid selection. Try again.\n");
+                                            ui.showMessage("Invalid selection.\n");
                                         }
-                                    } else if (magicCat == 2) {
-                                        // White Magic
+                                    } else if (magicCat == 2) { // WHITE MAGIC
                                         int skillIdx = ui.askFilteredSkillMenu(player, SkillType.WHITE_MAGIC, "WHITE MAGIC");
-
                                         if (skillIdx == -1) {
-                                            // Vuelve al selector de categorías
                                             ui.showMessage("Returning to categories...\n");
                                         } else if (skillIdx >= 0 && skillIdx < player.getSkills().size() && player.getSkills().get(skillIdx).getType() == SkillType.WHITE_MAGIC) {
                                             ui.showMessage(player.useSkill(enemy, skillIdx));
-                                            validTurn = true;      // Fin del turno
-                                            choosingMagic = false; // Salimos del bucle de magia
+                                            validTurn = true;
+                                            choosingMagic = false;
                                         } else {
-                                            ui.showMessage("Invalid selection. Try again.\n");
+                                            ui.showMessage("Invalid selection.\n");
                                         }
-                                    } else {
-                                        ui.showMessage("Invalid category. Try again.\n");
                                     }
                                 }
                             }
-                            case 4 -> {
-                                // 4. ITEMS
+                            case 4 -> { // ITEMS
                                 int itemIndex = ui.askItemMenu(player);
-
                                 if (itemIndex == -1) {
                                     ui.showMessage("Returning to main menu...\n");
                                 } else if (itemIndex >= 0 && itemIndex < player.getItems().size()) {
                                     ui.showMessage(player.useItem(itemIndex));
-                                    validTurn = true; // Fin del turno
+                                    validTurn = true;
                                 } else {
-                                    ui.showMessage("Invalid item selection. Try again.\n");
+                                    ui.showMessage("Invalid item selection.\n");
                                 }
                             }
-                            default ->
-                                ui.showMessage("Invalid option. Please enter 1, 2, 3, or 4.\n");
+                            case 5 -> { // FFX SUMMON AEON (Liskov Substitution Principle)
+                                if (!player.getSummons().isEmpty()) {
+                                    int summonIndex = ui.askSummonMenu(player);
+                                    if (summonIndex == -1) {
+                                        ui.showMessage("Returning to main menu...\n");
+                                    } else if (summonIndex >= 0 && summonIndex < player.getSummons().size()) {
+                                        Character chosenAeon = player.getSummons().get(summonIndex);
+                                        
+                                        if (!chosenAeon.isAlive()) {
+                                            ui.showMessage("\n" + chosenAeon.getName() + " cannot be summoned right now! (Fallen)");
+                                        } else {
+                                            ui.showMessage("\n>> " + player.getName() + " summons " + chosenAeon.getName() + "! <<\n");
+                                            
+                                            // Override the active player pointer with the Aeon
+                                            player = chosenAeon;
+                                            playerATB = 0; // Aeon starts with empty ATB gauge
+                                            validTurn = true;
+                                        }
+                                    } else {
+                                        ui.showMessage("Invalid Aeon selection.\n");
+                                    }
+                                } else {
+                                    ui.showMessage("Invalid option.\n");
+                                }
+                            }
+                            case 6 -> { // LIMIT BREAK
+                                if (player.getLimitSkill() != null && player.getLimitGauge() >= 100) {
+                                    ui.showMessage(player.useLimitBreak(enemy));
+                                    validTurn = true;
+                                } else {
+                                    ui.showMessage("Invalid option. Limit is not ready!\n");
+                                }
+                            }
+                            case 7 -> { // FF7 MATERIA SUMMON
+                                if (player.getFf7Summon() != null && player.getLimitGauge() >= 100) {
+                                    ui.showMessage(player.useSummon(enemy));
+                                    validTurn = true;
+                                } else {
+                                    ui.showMessage("Invalid option. Summon is not ready!\n");
+                                }
+                            }
+                            default -> ui.showMessage("Invalid option.\n");
                         }
                     }
                 }
-
-                // End of Player Turn: decay statuses
-                String playerDecayLog = player.decayStatuses();
-                if (!playerDecayLog.isEmpty()) {
-                    ui.showMessage(playerDecayLog);
-                }
+                ui.showMessage("\n-------------------------------");
             }
 
             // ==========================================
-            //               ENEMY TURN
+            // 2. ENEMY TURN PROCESSING
             // ==========================================
-            // Only execute turn if the enemy survived the player's attack
-            if (enemy.isAlive()) {
+            if (enemyATB >= ATB_THRESHOLD && originalPlayer.isAlive() && enemy.isAlive()) {
+                enemyATB -= ATB_THRESHOLD; 
+
                 ui.showMessage("\n--- " + enemy.getName() + "'s Turn ---");
 
-                // 1. Process enemy's Status Effects
                 String enemyStatusLog = enemy.processStatuses();
-                if (!enemyStatusLog.isEmpty()) {
-                    ui.showMessage(enemyStatusLog);
-                }
+                if (!enemyStatusLog.isEmpty()) ui.showMessage(enemyStatusLog);
 
-                // Check if enemy fainted from status effects
-                if (!enemy.isAlive()) {
-                    ui.showMessage(enemy.getName() + " has fainted!");
+                if (!enemy.isAlive()) break;
+
+                if (!enemy.canAct()) {
+                    ui.showMessage(enemy.getName() + " is unable to move this turn!");
                 } else {
-                    // 2. Check if the enemy can move
-                    if (!enemy.canAct()) {
-                        ui.showMessage(enemy.getName() + " is unable to move this turn!");
+                    
+                    // Advanced AI: Prioritize ultimate attacks if the limit gauge is full
+                    if (enemy.getLimitSkill() != null && enemy.getLimitGauge() >= 100) {
+                        ui.showMessage(enemy.useLimitBreak(player));
                     } else {
-                        // 3. Simple Artificial Intelligence (AI)
-                        // 50% chance to attack, 50% chance to use their first skill
+                        // Basic weighted AI (50% physical, 50% first available skill)
                         int enemyAction = random.nextInt(2);
-
-                        if (enemyAction == 0) {
+                        if (enemyAction == 0 || enemy.getSkills().isEmpty()) {
                             ui.showMessage(enemy.attack(player));
                         } else {
-                            // The enemy uses the skill at index 0 of their list
                             ui.showMessage(enemy.useSkill(player, 0));
                         }
                     }
-
-                    // End of Enemy Turn: decay statuses
-                    String enemyDecayLog = enemy.decayStatuses();
-                    if (!enemyDecayLog.isEmpty()) {
-                        ui.showMessage(enemyDecayLog);
+                }
+                
+                // Post-attack check: Did the enemy kill the player's Aeon?
+                if (!player.isAlive()) {
+                    if (player != originalPlayer) {
+                        ui.showMessage("\n>> " + player.getName() + " fades away... " + originalPlayer.getName() + " returns to the battlefield! <<\n");
+                        player = originalPlayer; 
+                        playerATB = 50; // Grant the returning summoner a 50% ATB head start
+                    } else {
+                        break; // Real Game Over
                     }
                 }
+                
+                ui.showMessage("\n-------------------------------");
             }
+        } // End of ATB Loop
 
-            ui.showMessage("\n-------------------------------");
-        }
-
-        // --- 4. BATTLE WRAP-UP ---
         ui.showMessage("\n===============================");
 
-        if (player.isAlive()) {
-            ui.showMessage("Victory! The winner is: " + player.getName());
+        if (originalPlayer.isAlive()) {
+            ui.showMessage("Victory! The winner is: " + originalPlayer.getName());
         } else {
             ui.showMessage("Game Over! The winner is: " + enemy.getName());
         }
 
-        // Close the scanner and free resources
         ui.close();
     }
 }
