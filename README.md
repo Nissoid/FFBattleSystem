@@ -1,100 +1,240 @@
-Final Fantasy Turn-Based Battle System (Java GUI v4.0) ⚔️
-An advanced, object-oriented JRPG combat system inspired by Final Fantasy, developed in Java following clean architecture principles (MVC pattern, Factory design pattern, and SOLID principles), now featuring a fully interactive Java Swing desktop graphical interface.
+# Final Fantasy Turn-Based Battle System (Java GUI v4.0) ⚔️
 
-🚀 Key Features
-Clean MVC Architecture: Total separation between business logic (Models), the desktop graphical interface (SwingUI View), and flow coordination (FFBattleSystem Controller).
+An advanced, object-oriented JRPG combat system inspired by Final Fantasy, developed in Java following clean architecture principles (MVC, Factory Pattern, Prototype Pattern, and SOLID principles), now featuring a fully interactive Java Swing desktop graphical interface.
 
-Interactive Java Swing GUI: Replaced text-based CLI with a modern desktop window featuring real-time HUD dashboard, live HP/MP pools, visual limit gauges, and modal selection dialogs.
+---
 
-Dynamic ATB Combat System: Active Time Battle (ATB) engine where turn frequency is dictated by each combatant's speed statistic.
+## 🚀 Key Features
 
-Advanced Mathematical & Combat Engine: Separates physAttack, magicAttack, physDefense, and magicDefense to create distinct RPG roles, paired with an RNG critical hit system scaled against the luck attribute.
+### Clean MVC Architecture
+Total separation between business logic (**Models**), the desktop graphical interface (**SwingUI View**), and flow coordination (**FFBattleSystem Controller**).
 
-Reactive Limit/Overdrive & Dual Ultimate Systems: A charging bar (0% to 100%) that fills dynamically when taking damage, unlocking either FFX Grand Summons (character substitution) or FF7 Limit Breaks/Materia.
+### Interactive Java Swing GUI
+Replaced the text-based CLI with a modern desktop window featuring:
 
-Extended Character Roster (Factory Pattern): Centralized object creation via GameFactory featuring iconic heroes and bosses from Final Fantasy VII and Final Fantasy X (Cloud, Barret, Tidus, Yuna, Wakka, Sephiroth, Jenova, Rufus, Seymour, Yunalesca, Sinh, and Aeris).
+- Real-time HUD dashboard
+- Live HP/MP pools
+- Visual Limit/Overdrive gauges
+- Interactive modal selection dialogs
+- Dynamic combat logs
 
-Advanced Status Effect Engine: Dynamic management of periodic and disabling conditions like Poison (damage over time), Sleep, and Paralysis (turn-skipping). Uses the Prototype Pattern (copy constructors) to safely instantiate effects without reference pollution.
+### Dynamic ATB Combat System
+Implements an **Active Time Battle (ATB)** engine where turn frequency is dictated by each combatant's Speed statistic.
 
-Hierarchical JRPG Menus: Categorized command navigation allowing players to switch between Physical Abilities, Black Magic, White Magic, Inventory items, Summons, and Limits.
+### Advanced Mathematical & Combat Engine
+Features a complete RPG stat system with:
 
-Status-Healing Support Items & Spells: Dedicated items (Antidote, Alarm Clock, Remedy) and the white magic spell Esna to cleanse character debuffs dynamically.
+- `physAttack`
+- `magicAttack`
+- `physDefense`
+- `magicDefense`
+- `speed`
+- `luck`
 
-Autonomous AI Enemy: Opponents make tactical decisions using a pseudo-random weighted system, prioritizing ultimate attacks when their limit gauge is full.
+Includes a critical hit system scaled by the character's Luck attribute.
 
-🧱 Applied Concepts & Design Patterns
-Single Responsibility Principle (SRP): Each class serves a distinct, isolated purpose: controllers coordinate, views render graphical elements, factories instantiate, and models compute math.
+### Reactive Limit/Overdrive & Dual Ultimate Systems
+Characters build a Limit Gauge (0%–100%) while receiving damage, unlocking:
 
-Factory Pattern: Centralizes character assembly, mapping unique IDs to fully equipped entities with specialized skill sets and inventories.
+- **Final Fantasy X Grand Summons / Aeons**
+- **Final Fantasy VII Limit Breaks**
+- Ultimate Materia abilities
 
-Encapsulation & Delegation: Private attributes are protected via getters/setters, delegating mathematical state updates directly to domain models.
+### Extended Character Roster (Factory Pattern)
+Centralized character creation through `GameFactory`, featuring iconic heroes and villains from Final Fantasy VII and Final Fantasy X:
 
-Composition: Character models establish robust "has-a" relationships via collection management (ArrayList) of Skill, Item, and StatusEffect objects.
+| Heroes | Bosses |
+|------|------|
+| Cloud | Sephiroth |
+| Barret | Jenova |
+| Tidus | Rufus |
+| Yuna | Seymour |
+| Wakka | Yunalesca |
+| Aeris | Sinh |
 
-Prototype Pattern: Leveraged via copy constructors in StatusEffect to securely clone debuffs upon application.
+### Advanced Status Effect Engine
 
-📂 Project Structure & Class Summary
-Plaintext
+Supports dynamic status ailments such as:
+
+- Poison (Damage over Time)
+- Sleep (Turn Disable)
+- Paralysis (Chance to Skip Turn)
+
+Implemented using the **Prototype Pattern** through copy constructors to safely instantiate effects without shared references.
+
+### Hierarchical JRPG Menus
+
+Categorized command navigation:
+
+- ⚔️ Physical Skills
+- 🔥 Black Magic
+- ✨ White Magic
+- 🎒 Inventory
+- 🐉 Summons / Aeons
+- 💥 Limit Breaks
+
+### Status-Healing Support Items & Spells
+
+Support system includes:
+
+- Antidote
+- Alarm Clock
+- Remedy
+- Esna (White Magic)
+
+### Autonomous Enemy AI
+
+Enemies utilize a weighted pseudo-random decision system capable of:
+
+- Selecting optimal attacks
+- Prioritizing Limit abilities
+- Dynamically reacting to combat states
+
+---
+
+## 🧱 Applied Concepts & Design Patterns
+
+| Concept | Description |
+|--------|-------------|
+| MVC Pattern | Separation between Models, Views, and Controllers. |
+| Factory Pattern | Centralized creation of playable characters and bosses. |
+| Prototype Pattern | Safe cloning of status effects through copy constructors. |
+| SOLID Principles | Focus on maintainability and extensibility. |
+| SRP | Every class has one clearly defined responsibility. |
+| Encapsulation | Internal state protected through getters and setters. |
+| Delegation | Mathematical calculations delegated to domain models. |
+| Composition | Characters own collections of Skills, Items, and Status Effects. |
+
+---
+
+## 📂 Project Structure
+
+```plaintext
 src/
 └── ffbattlesystem/
-    ├── FFBattleSystem.java   # Controller: Orchestrates ATB loops, turn states, and GUI events
-    ├── SwingUI.java          # View: Desktop graphical interface managing HUD, logs, and dialogs
-    ├── GameFactory.java      # Factory: Instantiates and equips the complete roster
-    ├── Character.java        # Model: Core fighter entity managing stats, inventory, and status updates
-    ├── Skill.java            # Model: Represents abilities and spells linked to a SkillType
-    ├── SkillType.java        # Enum: Categorizes skills into Physical, Black Magic, or White Magic
-    ├── StatusEffect.java     # Model: Manages temporary battle debuffs, damage over time, and turn skips
-    └── Item.java             # Model: Template for consumable items and quantity tracking
-🗺️ Development Roadmap
-Phase 1: Main turn-based battle loop, stats, and basic physical attack engine (v1.0)
+    ├── FFBattleSystem.java
+    ├── SwingUI.java
+    ├── GameFactory.java
+    ├── Character.java
+    ├── Skill.java
+    ├── SkillType.java
+    ├── StatusEffect.java
+    └── Item.java
+```
 
-Phase 1.5: Dynamic skill lists and basic healing logic (v1.1)
+### Class Responsibilities
 
-Phase 2: Inventory management and consumable item integration (v2.0)
+| Class | Responsibility |
+|------|------|
+| `FFBattleSystem` | Controller responsible for ATB loops, turn management, and GUI interactions. |
+| `SwingUI` | Java Swing graphical interface handling HUD, logs, and dialogs. |
+| `GameFactory` | Creates and equips all fighters. |
+| `Character` | Core entity managing stats, inventory, limits, and status effects. |
+| `Skill` | Represents combat abilities and spells. |
+| `SkillType` | Enum categorizing Physical, Black Magic, and White Magic. |
+| `StatusEffect` | Handles temporary effects and turn modifiers. |
+| `Item` | Represents consumables and quantity tracking. |
 
-Phase 3: Architectural refactoring (MVC), Factory pattern, and expanded roster (v2.0)
+---
 
-Phase 4: Status effect engine (Poison, Sleep, Paralysis), ESNA, status-clearing items, and hierarchical submenus (v3.0)
+## 🗺️ Development Roadmap
 
-Phase 5: Advanced combat features (speed stats, Limit Breaks/Overdrive mechanics) (v3.5)
+| Phase | Description | Version |
+|------|-------------|---------|
+| Phase 1 | Turn-based battle loop and physical attacks | v1.0 |
+| Phase 1.5 | Dynamic skills and healing logic | v1.1 |
+| Phase 2 | Inventory and consumable integration | v2.0 |
+| Phase 3 | MVC refactor, Factory Pattern, expanded roster | v2.0 |
+| Phase 4 | Status effects, ESNA, and hierarchical menus | v3.0 |
+| Phase 5 | Speed stats and Limit/Overdrive mechanics | v3.5 |
+| Phase 6 | Migration from TerminalUI to Java Swing GUI | v4.0 |
 
-Phase 6: Graphical User Interface (Migration from CLI TerminalUI to Java Swing GUI) (v4.0)
+---
 
-🎮 How to Play & Run
-1️⃣ Clone this repository
-Bash
+## 🎮 How to Play
+
+### 1. Clone the repository
+
+```bash
 git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
-2️⃣ Navigate to the project directory
-Bash
+```
+
+### 2. Navigate to the project directory
+
+```bash
 cd YOUR_REPOSITORY_NAME
-3️⃣ Compile all Java source files
-Bash
+```
+
+### 3. Compile the source files
+
+```bash
 javac ffbattlesystem/*.java
-4️⃣ Run the simulation
-Bash
+```
+
+### 4. Run the application
+
+```bash
 java ffbattlesystem.FFBattleSystem
-5️⃣ Begin Your Adventure
-A desktop graphical window will launch automatically. Follow the interactive dialog prompts to:
+```
 
-Select your fighter (IDs 1–12)
+### 5. Begin Your Adventure!
 
-Choose your opponent
+Once launched, a Java Swing window will automatically open.
 
-Navigate through graphical action buttons and menus:
+Players can:
 
-⚔️ Physical Skills
+- Select their fighter (IDs 1–12)
+- Choose an opponent
+- Monitor HP, MP, and Limit gauges
+- Execute skills through graphical menus
+- Utilize items and healing spells
+- Summon Aeons and activate Limit Breaks
+- Defeat legendary enemies and achieve victory
 
-🔥 Black Magic
+---
 
-✨ White Magic
+## 🎮 Available Commands
 
-🎒 Inventory Items
+| Category | Description |
+|---------|-------------|
+| ⚔️ Physical Skills | Weapon techniques and melee attacks. |
+| 🔥 Black Magic | Offensive magic abilities. |
+| ✨ White Magic | Healing and support spells. |
+| 🎒 Inventory | Consumable items and status cures. |
+| 🐉 Grand Summons | FFX Aeons and character substitutions. |
+| 💥 Limit Breaks | Powerful ultimate abilities. |
 
-🐉 Grand Summons / Aeons
+---
 
-💥 Limit Breaks
+## 🛠️ Technologies Used
 
-Defeat your enemy and claim victory!
+- Java 21+
+- Java Swing
+- Object-Oriented Programming (OOP)
+- MVC Architecture
+- Factory Pattern
+- Prototype Pattern
+- SOLID Principles
+- ArrayLists & Collections Framework
 
-👨‍💻 Author
-Developed by Dani
+---
+
+## 🔮 Future Improvements
+
+- Save & Load system.
+- Additional playable characters.
+- Multiple enemy encounters.
+- Equipment system.
+- Experience and leveling mechanics.
+- Sound effects and background music.
+- Animated combat sequences.
+- Migration to JavaFX.
+- Multiplayer PvP mode.
+
+---
+
+## 👨‍💻 Author
+
+Developed with passion by **Dani**
+
+> "The legacy of Final Fantasy lives on—one turn at a time."
