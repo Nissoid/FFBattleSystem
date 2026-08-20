@@ -2,6 +2,7 @@ package ffbattlesystem;
 
 import java.util.Random;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 /**
  * Controller class orchestrating the ATB (Active Time Battle) loop, 
@@ -10,6 +11,10 @@ import javax.swing.JOptionPane;
 public class FFBattleSystem {
 
     public static void main(String[] args) {
+        SwingUtilities.invokeLater(FFBattleSystem::runGame);
+    }
+
+    private static void runGame() {
 
         GameFactory factory = new GameFactory();
         SwingUI ui = new SwingUI();
@@ -57,17 +62,18 @@ public class FFBattleSystem {
                 if (!playerStatusLog.isEmpty()) ui.showMessage(playerStatusLog);
 
                 // Handle status damage knockout check before taking action
+                boolean skipTurn = false;
                 if (!player.isAlive()) {
                     if (player != originalPlayer) { 
                         ui.showMessage("\n>> " + player.getName() + " fades away... " + originalPlayer.getName() + " returns! <<\n");
                         player = originalPlayer; 
-                        playerATB = 0;
-                        continue; 
+                        skipTurn = true;
                     } else {
                         break; // Game Over
                     }
                 }
 
+                if (!skipTurn) {
                 if (!player.canAct()) {
                     ui.showMessage(player.getName() + " is unable to move this turn!");
                 } else {
@@ -88,18 +94,26 @@ public class FFBattleSystem {
                             options[0]
                         );
 
-                        String selectedOption = (choice >= 0 && choice < options.length) ? options[choice] : "Attack";
+                        // Canceled menu: re-prompt without consuming the turn
+                        if (choice < 0) {
+                            continue;
+                        }
+
+                        String selectedOption = options[choice];
 
                         if (selectedOption.equals("Attack")) {
                             ui.showMessage(player.attack(enemy));
                             validTurn = true;
                             
                         } else if (selectedOption.equals("Physical Skills")) {
-                            if (player.getSkills().isEmpty()) {
+                            java.util.List<Skill> physicalSkills = player.getSkills().stream()
+                                .filter(s -> s.getType() == SkillType.PHYSICAL)
+                                .collect(java.util.stream.Collectors.toList());
+                            if (physicalSkills.isEmpty()) {
                                 ui.showMessage("No physical skills available!");
                                 continue;
                             }
-                            String[] skillNames = player.getSkills().stream().map(Skill::getName).toArray(String[]::new);
+                            String[] skillNames = physicalSkills.stream().map(Skill::getName).toArray(String[]::new);
                             String chosenSkill = (String) JOptionPane.showInputDialog(ui, "Select Skill:", "Skills", JOptionPane.QUESTION_MESSAGE, null, skillNames, skillNames[0]);
                             
                             if (chosenSkill != null) {
@@ -148,12 +162,19 @@ public class FFBattleSystem {
                             String chosenItem = (String) JOptionPane.showInputDialog(ui, "Select Item:", "Inventory", JOptionPane.QUESTION_MESSAGE, null, itemNames, itemNames[0]);
                             
                             if (chosenItem != null) {
-                                int idx = 0;
-                                for(int i=0; i<player.getItems().size(); i++) {
-                                    if(chosenItem.contains(player.getItems().get(i).getName())) idx = i;
+                                int idx = -1;
+                                for(int i=0; i<itemNames.length; i++) {
+                                    if(itemNames[i].equals(chosenItem)) idx = i;
                                 }
-                                ui.showMessage(player.useItem(idx));
-                                validTurn = true;
+                                if(idx != -1) {
+                                    String itemResult = player.useItem(idx);
+                                    if (itemResult != null) {
+                                        ui.showMessage(itemResult);
+                                        validTurn = true;
+                                    } else {
+                                        ui.showMessage("Cannot use that item right now!");
+                                    }
+                                }
                             }
                             
                         } else if (selectedOption.equals("Summon Aeon")) {
@@ -168,7 +189,6 @@ public class FFBattleSystem {
                                         } else {
                                             ui.showMessage(">> " + player.getName() + " summons " + a.getName() + "! <<");
                                             player = a; // Substitute active combatant with Aeon
-                                            playerATB = 0;
                                             validTurn = true;
                                         }
                                     }
@@ -184,6 +204,7 @@ public class FFBattleSystem {
                             validTurn = true;
                         }
                     }
+                }
                 }
                 ui.updateStatus(player, enemy);
             }
@@ -212,7 +233,15 @@ public class FFBattleSystem {
                         if (enemyAction == 0 || enemy.getSkills().isEmpty()) {
                             ui.showMessage(enemy.attack(player));
                         } else {
-                            ui.showMessage(enemy.useSkill(player, 0));
+                            java.util.List<Skill> offensiveSkills = enemy.getSkills().stream()
+                                .filter(s -> s.getType() != SkillType.WHITE_MAGIC)
+                                .collect(java.util.stream.Collectors.toList());
+                            if (!offensiveSkills.isEmpty()) {
+                                Skill chosen = offensiveSkills.get(random.nextInt(offensiveSkills.size()));
+                                ui.showMessage(enemy.useSkill(player, enemy.getSkills().indexOf(chosen)));
+                            } else {
+                                ui.showMessage(enemy.attack(player));
+                            }
                         }
                     }
                 }
@@ -222,7 +251,6 @@ public class FFBattleSystem {
                     if (player != originalPlayer) {
                         ui.showMessage("\n>> " + player.getName() + " fades away... " + originalPlayer.getName() + " returns! <<\n");
                         player = originalPlayer; 
-                        playerATB = 50; // Head start for returning summoner
                     } else {
                         break; 
                     }

@@ -34,6 +34,13 @@ public class StatusEffect {
     public void decreaseTime() { 
         this.time--; 
     }
+
+    /**
+     * Resets the remaining duration of the effect (used when re-applied).
+     */
+    public void setTime(int time) {
+        this.time = time;
+    }
     
     // --- GETTERS ---
     public String getName() { return name; }

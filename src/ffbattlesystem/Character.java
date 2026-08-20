@@ -130,7 +130,15 @@ public class Character {
         String actionLog = this.name + " uses " + selectedSkill.getName() + "!\n";
 
         // Combat Engine: Dynamic scaling based on SkillType
-        if (selectedSkill.getType() == SkillType.WHITE_MAGIC) {
+        if (selectedSkill.getName().equalsIgnoreCase("Esna")) {
+            if (!this.activeStatuses.isEmpty()) {
+                this.activeStatuses.clear();
+                actionLog += this.name + "'s ailments are cleansed by Esna!";
+            } else {
+                actionLog += this.name + " casts Esna, but there are no ailments to cleanse!";
+            }
+
+        } else if (selectedSkill.getType() == SkillType.WHITE_MAGIC) {
             int healAmount = this.magicAttack + selectedSkill.getDamage();
             actionLog += this.healing(healAmount);
 
@@ -228,11 +236,18 @@ public class Character {
 
     /**
      * Consumes an item from the inventory to restore stats or cure ailments.
+     * Returns null if the item cannot be used (depleted or already full).
      */
     public String useItem(int itemIndex) {
         Item selectedItem = this.items.get(itemIndex);
         if (selectedItem.getQuantity() <= 0) {
-            return "You don't have any " + selectedItem.getName() + " left!";
+            return null;
+        }
+        if (selectedItem.isRestoresHp() && selectedItem.getRestoreAmount() > 0 && this.currentHp >= this.maxHp) {
+            return null;
+        }
+        if (!selectedItem.isRestoresHp() && this.currentMp >= this.maxMp) {
+            return null;
         }
 
         selectedItem.decreaseQuantity();
@@ -255,6 +270,11 @@ public class Character {
                 this.currentMp = this.maxMp;
             }
             log += this.name + " recovers " + selectedItem.getRestoreAmount() + " MP!";
+        }
+
+        // Remove depleted items from the inventory
+        if (selectedItem.getQuantity() <= 0) {
+            this.items.remove(itemIndex);
         }
         return log;
     }
@@ -304,6 +324,12 @@ public class Character {
 
     // --- UTILITY METHODS ---
     public void addStatusEffect(StatusEffect newEffect) {
+        for (StatusEffect existing : this.activeStatuses) {
+            if (existing.getName().equals(newEffect.getName())) {
+                existing.setTime(newEffect.getTime());
+                return;
+            }
+        }
         this.activeStatuses.add(newEffect);
     }
 
