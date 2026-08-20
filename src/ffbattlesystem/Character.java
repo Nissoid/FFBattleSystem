@@ -243,11 +243,26 @@ public class Character {
         if (selectedItem.getQuantity() <= 0) {
             return null;
         }
-        if (selectedItem.isRestoresHp() && selectedItem.getRestoreAmount() > 0 && this.currentHp >= this.maxHp) {
-            return null;
+
+        boolean isStatusCure = false;
+        if (selectedItem.getName().equals("Antidote")) {
+            if (!hasStatus("Poison")) return null;
+            isStatusCure = true;
+        } else if (selectedItem.getName().equals("Alarm Clock")) {
+            if (!hasStatus("Sleep")) return null;
+            isStatusCure = true;
+        } else if (selectedItem.getName().equals("Remedy")) {
+            if (this.activeStatuses.isEmpty()) return null;
+            isStatusCure = true;
         }
-        if (!selectedItem.isRestoresHp() && this.currentMp >= this.maxMp) {
-            return null;
+
+        if (!isStatusCure) {
+            if (selectedItem.isRestoresHp() && selectedItem.getRestoreAmount() > 0 && this.currentHp >= this.maxHp) {
+                return null;
+            }
+            if (!selectedItem.isRestoresHp() && this.currentMp >= this.maxMp) {
+                return null;
+            }
         }
 
         selectedItem.decreaseQuantity();
@@ -320,6 +335,15 @@ public class Character {
             }
         }
         return true;
+    }
+
+    public boolean hasStatus(String statusName) {
+        for (StatusEffect effect : this.activeStatuses) {
+            if (effect.getName().equalsIgnoreCase(statusName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // --- UTILITY METHODS ---
