@@ -1,4 +1,7 @@
 # Carpetas de compilación de Java
+build/
+dist/
+nbproject/private/
 bin/
 out/
 target/
